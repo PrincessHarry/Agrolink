@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Server Error - AgroLink{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="text-center">
+            <i class="fas fa-server text-6xl text-red-600 mb-4"></i>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                500 - Server Error
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Something went wrong on our end. We're working to fix it.
+            </p>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Please try again later or contact support if the problem persists.
+            </p>
+        </div>
+
+        <div class="mt-8 text-center">
+            <a href="{% url 'link:home' %}" class="font-medium text-green-600 hover:text-green-500">
+                Return to home page
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

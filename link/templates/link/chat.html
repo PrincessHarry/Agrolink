@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat - AgroLink{% endblock %}
+
+{% block content %}
+<div class="h-screen bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex h-[calc(100vh-8rem)]">
+            <!-- Conversations List -->
+            <div class="w-1/4 bg-white rounded-l-lg shadow-lg overflow-hidden">
+                <div class="p-4 border-b">
+                    <h2 class="text-xl font-semibold text-gray-800">Conversations</h2>
+                </div>
+                <div class="overflow-y-auto h-[calc(100%-4rem)]">
+                    {% for conversation in conversations %}
+                    <div class="p-4 border-b hover:bg-gray-50 cursor-pointer {% if selected_conversation and selected_conversation.other_user.id == conversation.other_user.id %}bg-green-50{% endif %}"
+                        onclick="selectConversation('{{ conversation.other_user.id }}')">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                {% if conversation.other_user.userprofile.profile_picture %}
+                                <img class="h-12 w-12 rounded-full object-cover"
+                                    src="{{ conversation.other_user.userprofile.profile_picture.url }}"
+                                    alt="{{ conversation.other_user.username }}">
+                                {% else %}
+                                <div class="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
+                                    <span class="text-xl font-semibold text-gray-500">
+                                        {{ conversation.other_user.username|first|upper }}
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-sm font-medium text-gray-900">
+                                        {{ conversation.other_user.username }}
+                                    </h3>
+                                    {% if conversation.last_message %}
+                                    <span class="text-xs text-gray-500">
+                                        {{ conversation.last_message.created_at|date:"M d, H:i" }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <div class="flex items-center justify-between mt-1">
+                                    <p class="text-sm text-gray-500 truncate">
+                                        {% if conversation.last_message %}
+                                        {% if conversation.last_message.sender == request.user.userprofile %}
+                                        You: 
+                                        {% endif %}
+                                        {{ conversation.last_message.content|truncatechars:30 }}
+                                        {% else %}
+                                        No messages yet
+                                        {% endif %}
+                                    </p>
+                                    {% if conversation.unread_count > 0 %}
+                                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        {{ conversation.unread_count }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-4 text-center text-gray-500">
+                        No conversations yet
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div class="w-3/4 bg-white rounded-r-lg shadow-lg flex flex-col">
+                {% if selected_conversation %}
+                <!-- Chat Header -->
+                <div class="p-4 border-b flex items-center justify-between">
+                    <div class="flex items-center">
+                        {% if selected_conversation.other_user.userprofile.profile_picture %}
+                        <img class="h-10 w-10 rounded-full object-cover"
+                            src="{{ selected_conversation.other_user.userprofile.profile_picture.url }}"
+                            alt="{{ selected_conversation.other_user.username }}">
+                        {% else %}
+                        <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                            <span class="text-lg font-semibold text-gray-500">
+                                {{ selected_conversation.other_user.username|first|upper }}
+                            </span>
+                        </div>
+                        {% endif %}
+                        <div class="ml-3">
+                            <h3 class="text-lg font-medium text-gray-900">
+                                {{ selected_conversation.other_user.username }}
+                            </h3>
+                            <p class="text-sm text-gray-500" id="typing-indicator"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div class="flex-1 overflow-y-auto p-4" id="messages-container">
+                    {% for message in messages %}
+                    <div class="flex {% if message.sender == request.user.userprofile %}justify-end{% endif %} mb-4">
+                        <div class="{% if message.sender == request.user.userprofile %}bg-green-100{% else %}bg-gray-100{% endif %} rounded-lg px-4 py-2 max-w-[70%]">
+                            <div class="text-sm text-gray-500 mb-1">
+                                {{ message.sender.user.username }}
+                                <span class="ml-2">{{ message.created_at|date:"H:i" }}</span>
+                            </div>
+                            <div class="text-gray-800">
+                                {{ message.content }}
+                            </div>
+                            {% if message.is_read %}
+                            <div class="text-xs text-gray-500 mt-1 text-right">
+                                Read {{ message.read_at|date:"H:i" }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Message Input -->
+                <div class="p-4 border-t">
+                    <form id="message-form" class="flex items-center">
+                        <input type="text" id="message-input"
+                            class="flex-1 border rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                            placeholder="Type your message...">
+                        <button type="submit"
+                            class="bg-green-600 text-white px-6 py-2 rounded-r-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                            Send
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <div class="flex-1 flex items-center justify-center">
+                    <div class="text-center text-gray-500">
+                        <p class="text-lg">Select a conversation to start chatting</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let chatSocket = null;
+let currentConversationId = null;
+let typingTimeout = null;
+
+function connectWebSocket() {
+    chatSocket = new WebSocket(
+        'ws://' + window.location.host + '/ws/chat/'
+    );
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        
+        if (data.type === 'chat_message') {
+            handleNewMessage(data.message);
+        } else if (data.type === 'messages_read') {
+            handleMessagesRead(data.message_ids);
+        } else if (data.type === 'typing') {
+            handleTyping(data.user_id, data.is_typing);
+        }
+    };
+
+    chatSocket.onclose = function(e) {
+        console.error('Chat socket closed unexpectedly');
+        setTimeout(connectWebSocket, 1000);
+    };
+}
+
+function selectConversation(userId) {
+    window.location.href = `{% url 'link:conversations' %}?conversation=${userId}`;
+}
+
+function handleNewMessage(message) {
+    if (currentConversationId === message.sender_id) {
+        const messagesContainer = document.getElementById('messages-container');
+        const messageHtml = `
+            <div class="flex justify-start mb-4">
+                <div class="bg-gray-100 rounded-lg px-4 py-2 max-w-[70%]">
+                    <div class="text-sm text-gray-500 mb-1">
+                        ${message.sender_name}
+                        <span class="ml-2">${new Date(message.created_at).toLocaleTimeString()}</span>
+                    </div>
+                    <div class="text-gray-800">
+                        ${message.content}
+                    </div>
+                </div>
+            </div>
+        `;
+        messagesContainer.insertAdjacentHTML('beforeend', messageHtml);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        
+        // Mark message as read
+        markMessagesAsRead([message.id]);
+    }
+}
+
+function handleMessagesRead(messageIds) {
+    messageIds.forEach(id => {
+        const messageElement = document.querySelector(`[data-message-id="${id}"]`);
+        if (messageElement) {
+            const readIndicator = messageElement.querySelector('.read-indicator');
+            if (readIndicator) {
+                readIndicator.textContent = 'Read';
+            }
+        }
+    });
+}
+
+function handleTyping(userId, isTyping) {
+    const typingIndicator = document.getElementById('typing-indicator');
+    if (typingIndicator) {
+        typingIndicator.textContent = isTyping ? 'Typing...' : '';
+    }
+}
+
+function sendMessage(e) {
+    e.preventDefault();
+    const messageInput = document.getElementById('message-input');
+    const content = messageInput.value.trim();
+    
+    if (content && chatSocket && currentConversationId) {
+        chatSocket.send(JSON.stringify({
+            'type': 'chat_message',
+            'receiver_id': currentConversationId,
+            'content': content,
+            'message_type': 'text'
+        }));
+        
+        messageInput.value = '';
+    }
+}
+
+function markMessagesAsRead(messageIds) {
+    if (chatSocket && currentConversationId) {
+        chatSocket.send(JSON.stringify({
+            'type': 'read_messages',
+            'message_ids': messageIds,
+            'conversation_id': currentConversationId
+        }));
+    }
+}
+
+function handleTypingEvent(e) {
+    if (chatSocket && currentConversationId) {
+        clearTimeout(typingTimeout);
+        
+        chatSocket.send(JSON.stringify({
+            'type': 'typing',
+            'receiver_id': currentConversationId,
+            'is_typing': true
+        }));
+        
+        typingTimeout = setTimeout(() => {
+            chatSocket.send(JSON.stringify({
+                'type': 'typing',
+                'receiver_id': currentConversationId,
+                'is_typing': false
+            }));
+        }, 1000);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    connectWebSocket();
+    
+    const messageForm = document.getElementById('message-form');
+    const messageInput = document.getElementById('message-input');
+    
+    if (messageForm) {
+        messageForm.addEventListener('submit', sendMessage);
+    }
+    
+    if (messageInput) {
+        messageInput.addEventListener('input', handleTypingEvent);
+    }
+    
+    // Set current conversation ID if available
+    {% if selected_conversation %}
+    currentConversationId = '{{ selected_conversation.other_user.id }}';
+    {% endif %}
+    
+    // Scroll to bottom of messages
+    const messagesContainer = document.getElementById('messages-container');
+    if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+});
+</script>
+{% endblock %} 

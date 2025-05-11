@@ -1,0 +1,167 @@
+{% extends 'link/base.html' %}
+
+{% block title %}Chat with {{ other_user.username }} - AgroLink{% endblock %}
+
+{% block content %}
+<div class="bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Chat Header -->
+        <div class="border-b border-gray-200 pb-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <img class="h-12 w-12 rounded-full" src="{{ other_user.profile.avatar.url }}" alt="{{ other_user.username }}">
+                </div>
+                <div class="ml-4">
+                    <h2 class="text-lg font-medium text-gray-900">{{ other_user.username }}</h2>
+                    <p class="text-sm text-gray-500">
+                        {% if other_user.profile.is_farmer %}
+                        Farmer
+                        {% else %}
+                        Buyer
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div class="mt-6 space-y-6" id="chat-messages">
+            {% for message in messages %}
+            <div class="flex {% if message.sender == request.user %}justify-end{% endif %}">
+                <div class="flex max-w-xs lg:max-w-md">
+                    {% if message.sender != request.user %}
+                    <div class="flex-shrink-0 mr-3">
+                        <img class="h-8 w-8 rounded-full" src="{{ message.sender.profile.avatar.url }}" alt="{{ message.sender.username }}">
+                    </div>
+                    {% endif %}
+                    <div>
+                        <div class="rounded-lg px-4 py-2 {% if message.sender == request.user %}bg-green-600 text-white{% else %}bg-gray-100 text-gray-900{% endif %}">
+                            <p class="text-sm">{{ message.content }}</p>
+                        </div>
+                        <div class="mt-1 flex items-center {% if message.sender == request.user %}justify-end{% endif %}">
+                            <p class="text-xs text-gray-500">
+                                {{ message.created_at|date:"g:i A" }}
+                                {% if message.sender == request.user and message.is_read %}
+                                <span class="ml-1">
+                                    <i class="fas fa-check-double text-green-500"></i>
+                                </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Message Input -->
+        <div class="mt-6">
+            <form id="message-form" class="flex space-x-3">
+                {% csrf_token %}
+                <div class="flex-1">
+                    <label for="message" class="sr-only">Message</label>
+                    <textarea
+                        id="message"
+                        name="message"
+                        rows="1"
+                        class="shadow-sm block w-full focus:ring-green-500 focus:border-green-500 sm:text-sm border-gray-300 rounded-md"
+                        placeholder="Type your message..."
+                        required
+                    ></textarea>
+                </div>
+                <button
+                    type="submit"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                >
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Send
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // WebSocket connection for real-time chat
+    const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const ws_path = `${ws_scheme}://${window.location.host}/ws/chat/{{ conversation.id }}/`;
+    const ws = new WebSocket(ws_path);
+
+    // Scroll to bottom of chat
+    function scrollToBottom() {
+        const chatMessages = document.getElementById('chat-messages');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Initial scroll
+    scrollToBottom();
+
+    // Handle incoming messages
+    ws.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'chat_message') {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex ${data.sender === '{{ request.user.id }}' ? 'justify-end' : ''}`;
+            
+            const messageContent = `
+                <div class="flex max-w-xs lg:max-w-md">
+                    ${data.sender !== '{{ request.user.id }}' ? `
+                        <div class="flex-shrink-0 mr-3">
+                            <img class="h-8 w-8 rounded-full" src="${data.sender_avatar}" alt="${data.sender_username}">
+                        </div>
+                    ` : ''}
+                    <div>
+                        <div class="rounded-lg px-4 py-2 ${data.sender === '{{ request.user.id }}' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-900'}">
+                            <p class="text-sm">${data.message}</p>
+                        </div>
+                        <div class="mt-1 flex items-center ${data.sender === '{{ request.user.id }}' ? 'justify-end' : ''}">
+                            <p class="text-xs text-gray-500">
+                                ${data.timestamp}
+                                ${data.sender === '{{ request.user.id }}' && data.is_read ? `
+                                    <span class="ml-1">
+                                        <i class="fas fa-check-double text-green-500"></i>
+                                    </span>
+                                ` : ''}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            messageDiv.innerHTML = messageContent;
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+    };
+
+    // Handle form submission
+    document.getElementById('message-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const messageInput = document.getElementById('message');
+        const message = messageInput.value.trim();
+        
+        if (message) {
+            ws.send(JSON.stringify({
+                'message': message,
+                'conversation_id': '{{ conversation.id }}'
+            }));
+            messageInput.value = '';
+        }
+    });
+
+    // Handle WebSocket errors
+    ws.onclose = function(e) {
+        console.error('WebSocket closed unexpectedly');
+    };
+
+    // Auto-resize textarea
+    const textarea = document.getElementById('message');
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+</script>
+{% endblock %}
+{% endblock %} 

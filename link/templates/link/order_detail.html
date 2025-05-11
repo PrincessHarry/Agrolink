@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+
+{% block title %}Order #{{ order.id }} - AgroLink{% endblock %}
+
+{% block content %}
+<div class="bg-white">
+    <div class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto">
+            <!-- Order Header -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        Order #{{ order.id }}
+                    </h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                        Placed on {{ order.created_at|date:"F d, Y" }}
+                    </p>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Status</h4>
+                            <p class="mt-1 text-sm text-gray-900">
+                                <span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 {% if order.status == 'pending' %}bg-yellow-100 text-yellow-800{% elif order.status == 'confirmed' %}bg-blue-100 text-blue-800{% elif order.status == 'shipped' %}bg-purple-100 text-purple-800{% elif order.status == 'delivered' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </p>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Payment Status</h4>
+                            <p class="mt-1 text-sm text-gray-900">
+                                <span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 {% if order.payment_status == 'pending' %}bg-yellow-100 text-yellow-800{% elif order.payment_status == 'paid' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ order.get_payment_status_display }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Details -->
+            <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        Order Details
+                    </h3>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                    <div class="flex items-center">
+                        <div class="h-16 w-16 flex-shrink-0">
+                            <img class="h-16 w-16 rounded-lg object-cover" src="{{ order.product.image.url }}"
+                                alt="{{ order.product.name }}">
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="text-lg font-medium text-gray-900">{{ order.product.name }}</h4>
+                            <p class="text-sm text-gray-500">{{ order.get_category_display }}</p>
+                        </div>
+                    </div>
+                    <dl class="mt-6 grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Quantity</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ order.quantity }} {{ order.product.unit }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Price per unit</dt>
+                            <dd class="mt-1 text-sm text-gray-900">${{ order.product.price }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Total Amount</dt>
+                            <dd class="mt-1 text-sm text-gray-900">${{ order.total_price }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Seller</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ order.product.farmer.user.username }}</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Delivery Information -->
+            <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        Delivery Information
+                    </h3>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                    <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Shipping Address</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ order.shipping_address }}</dd>
+                        </div>
+                        {% if order.tracking_number %}
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Tracking Number</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ order.tracking_number }}</dd>
+                        </div>
+                        {% endif %}
+                        {% if order.estimated_delivery %}
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Estimated Delivery</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ order.estimated_delivery|date:"F d, Y" }}</dd>
+                        </div>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Order Timeline -->
+            <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        Order Timeline
+                    </h3>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                    <div class="flow-root">
+                        <ul class="-mb-8">
+                            {% for activity in order.activities.all %}
+                            <li>
+                                <div class="relative pb-8">
+                                    {% if not forloop.last %}
+                                    <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"
+                                        aria-hidden="true"></span>
+                                    {% endif %}
+                                    <div class="relative flex space-x-3">
+                                        <div>
+                                            <span
+                                                class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white {% if activity.status == 'pending' %}bg-yellow-500{% elif activity.status == 'confirmed' %}bg-blue-500{% elif activity.status == 'shipped' %}bg-purple-500{% elif activity.status == 'delivered' %}bg-green-500{% else %}bg-red-500{% endif %}">
+                                                <svg class="h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg"
+                                                    viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                    <path fill-rule="evenodd"
+                                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                        clip-rule="evenodd" />
+                                                </svg>
+                                            </span>
+                                        </div>
+                                        <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                            <div>
+                                                <p class="text-sm text-gray-500">
+                                                    {{ activity.get_status_display }}
+                                                    {% if activity.notes %}
+                                                    <span class="font-medium text-gray-900">{{ activity.notes }}</span>
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                            <div class="text-right text-sm whitespace-nowrap text-gray-500">
+                                                <time datetime="{{ activity.created_at|date:'c' }}">
+                                                    {{ activity.created_at|date:"M d, Y H:i" }}
+                                                </time>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Information -->
+            <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        Payment Information
+                    </h3>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                    <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Payment Status</dt>
+                            <dd class="mt-1 text-sm text-gray-900">
+                                <span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 {% if order.payment_status == 'pending' %}bg-yellow-100 text-yellow-800{% elif order.payment_status == 'paid' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ order.get_payment_status_display }}
+                                </span>
+                            </dd>
+                        </div>
+                        {% if order.transactions.exists %}
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Last Transaction</dt>
+                            <dd class="mt-1 text-sm text-gray-900">
+                                {{ order.transactions.first.reference }}
+                            </dd>
+                        </div>
+                        {% endif %}
+                    </dl>
+
+                    {% if user.userprofile == order.buyer and order.payment_status != 'paid' %}
+                    <div class="mt-6">
+                        <button onclick="initiatePayment()" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            Pay Now
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-8 flex justify-end space-x-3">
+                {% if order.status == 'pending' and order.payment_status != 'paid' %}
+                <form method="POST" action="{% url 'link:cancel_order' order.id %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                        Cancel Order
+                    </button>
+                </form>
+                {% endif %}
+                {% if user.userprofile == order.product.farmer %}
+                <form method="POST" action="{% url 'link:update_order_status' order.id %}" class="inline">
+                    {% csrf_token %}
+                    <select name="status"
+                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                        {% for key, value in status_choices.items %}
+                        <option value="{{ key }}" {% if order.status == key %}selected{% endif %}>
+                            {{ value }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit"
+                        class="mt-2 inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Update Status
+                    </button>
+                </form>
+                {% endif %}
+                <a href="{% url 'link:order_list' %}"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    Back to Orders
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function initiatePayment() {
+    fetch(`/order/{{ order.id }}/payment/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            window.location.href = data.data.authorization_url;
+        } else {
+            alert('Failed to initialize payment. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    });
+}
+
+// Poll payment status every 5 seconds if payment is pending
+{% if order.payment_status == 'pending' %}
+function checkPaymentStatus() {
+    fetch(`/order/{{ order.id }}/payment/status/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success' && data.data.payment_status === 'success') {
+                window.location.reload();
+            }
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+// Start polling when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    setInterval(checkPaymentStatus, 5000);
+});
+{% endif %}
+</script>
+{% endblock %}
+
+{% endblock %} 

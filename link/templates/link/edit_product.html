@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit {{ product.name }} - AgroLink{% endblock %}
+
+{% block content %}
+<div class="bg-white">
+    <div class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto">
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        Edit Product
+                    </h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                        Update the details of your product below.
+                    </p>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                        <div class="rounded-md bg-red-50 p-4">
+                            <div class="flex">
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-medium text-red-800">
+                                        There were errors with your submission
+                                    </h3>
+                                    <div class="mt-2 text-sm text-red-700">
+                                        <ul class="list-disc pl-5 space-y-1">
+                                            {% for field, errors in form.errors.items %}
+                                                {% for error in errors %}
+                                                    <li>{{ error }}</li>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div>
+                            <label for="id_name" class="block text-sm font-medium text-gray-700">
+                                Product name
+                            </label>
+                            <div class="mt-1">
+                                {{ form.name }}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="id_description" class="block text-sm font-medium text-gray-700">
+                                Description
+                            </label>
+                            <div class="mt-1">
+                                {{ form.description }}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="id_category" class="block text-sm font-medium text-gray-700">
+                                Category
+                            </label>
+                            <div class="mt-1">
+                                {{ form.category }}
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                            <div>
+                                <label for="id_price" class="block text-sm font-medium text-gray-700">
+                                    Price
+                                </label>
+                                <div class="mt-1 relative rounded-md shadow-sm">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500 sm:text-sm">$</span>
+                                    </div>
+                                    {{ form.price }}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="id_quantity" class="block text-sm font-medium text-gray-700">
+                                    Quantity
+                                </label>
+                                <div class="mt-1">
+                                    {{ form.quantity }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="id_unit" class="block text-sm font-medium text-gray-700">
+                                Unit
+                            </label>
+                            <div class="mt-1">
+                                {{ form.unit }}
+                            </div>
+                            <p class="mt-2 text-sm text-gray-500">
+                                Enter the unit of measurement (e.g., kg, piece, dozen)
+                            </p>
+                        </div>
+
+                        <div>
+                            <label for="id_image" class="block text-sm font-medium text-gray-700">
+                                Product image
+                            </label>
+                            <div class="mt-1 flex items-center">
+                                <div class="flex-shrink-0">
+                                    <img class="h-12 w-12 rounded-full" src="{{ product.image.url }}" alt="{{ product.name }}">
+                                </div>
+                                <div class="ml-4">
+                                    {{ form.image }}
+                                </div>
+                            </div>
+                            <p class="mt-2 text-sm text-gray-500">
+                                Upload a new image to replace the current one
+                            </p>
+                        </div>
+
+                        <div class="flex justify-end space-x-3">
+                            <a href="{% url 'link:product_detail' product.slug %}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                Cancel
+                            </a>
+                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

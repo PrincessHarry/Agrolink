@@ -1,0 +1,95 @@
+{% extends 'link/base.html' %}
+
+{% block title %}Messages - AgroLink{% endblock %}
+
+{% block content %}
+<div class="bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="sm:flex sm:items-center">
+            <div class="sm:flex-auto">
+                <h1 class="text-xl font-semibold text-gray-900">Messages</h1>
+                <p class="mt-2 text-sm text-gray-700">
+                    A list of all your conversations with other users.
+                </p>
+            </div>
+        </div>
+
+        <!-- Message List -->
+        <div class="mt-8 flex flex-col">
+            <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+                    <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                        <ul class="divide-y divide-gray-200">
+                            {% for conversation in conversations %}
+                            <li class="relative bg-white hover:bg-gray-50">
+                                <a href="{% url 'link:message_detail' conversation.id %}" class="block">
+                                    <div class="px-4 py-4 sm:px-6">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0">
+                                                    <img class="h-12 w-12 rounded-full" src="{{ conversation.other_user.profile.avatar.url }}" alt="{{ conversation.other_user.username }}">
+                                                </div>
+                                                <div class="ml-4">
+                                                    <div class="flex items-center">
+                                                        <p class="text-sm font-medium text-gray-900">{{ conversation.other_user.username }}</p>
+                                                        {% if conversation.unread_count > 0 %}
+                                                        <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                            {{ conversation.unread_count }}
+                                                        </span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <p class="text-sm text-gray-500 truncate">{{ conversation.last_message.content }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="ml-2 flex-shrink-0 flex">
+                                                <p class="text-sm text-gray-500">
+                                                    {{ conversation.last_message.created_at|timesince }} ago
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                            {% empty %}
+                            <li class="relative bg-white">
+                                <div class="px-4 py-8 sm:px-6 text-center">
+                                    <div class="flex flex-col items-center justify-center">
+                                        <i class="fas fa-comments text-4xl text-gray-400 mb-4"></i>
+                                        <p class="text-lg font-medium text-gray-900">No conversations yet</p>
+                                        <p class="mt-1 text-sm text-gray-500">Start a conversation with a farmer or buyer.</p>
+                                        <a href="{% url 'link:product_list' %}" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                                            Browse Products
+                                        </a>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // WebSocket connection for real-time updates
+    const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const ws_path = `${ws_scheme}://${window.location.host}/ws/messages/`;
+    const ws = new WebSocket(ws_path);
+
+    ws.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'new_message') {
+            // Refresh the page to show new messages
+            window.location.reload();
+        }
+    };
+
+    ws.onclose = function(e) {
+        console.error('WebSocket closed unexpectedly');
+    };
+</script>
+{% endblock %}
+{% endblock %} 

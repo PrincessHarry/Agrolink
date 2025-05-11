@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Bank Transfer Instructions - AgroLink{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="text-center">
+            <i class="fas fa-university text-6xl text-green-600 mb-4"></i>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Bank Transfer Instructions
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Please use the following details to complete your payment
+            </p>
+        </div>
+
+        <div class="mt-8 bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">Payment Details</h3>
+                    <div class="mt-4 border-t border-gray-200">
+                        <dl class="divide-y divide-gray-200">
+                            <div class="py-4 flex justify-between">
+                                <dt class="text-sm font-medium text-gray-500">Amount</dt>
+                                <dd class="text-sm text-gray-900">₦{{ transaction.amount }}</dd>
+                            </div>
+                            <div class="py-4 flex justify-between">
+                                <dt class="text-sm font-medium text-gray-500">Reference</dt>
+                                <dd class="text-sm text-gray-900">{{ transaction.reference }}</dd>
+                            </div>
+                            <div class="py-4 flex justify-between">
+                                <dt class="text-sm font-medium text-gray-500">Bank</dt>
+                                <dd class="text-sm text-gray-900">{{ bank_details.bank_name }}</dd>
+                            </div>
+                            <div class="py-4 flex justify-between">
+                                <dt class="text-sm font-medium text-gray-500">Account Number</dt>
+                                <dd class="text-sm text-gray-900">{{ bank_details.account_number }}</dd>
+                            </div>
+                            <div class="py-4 flex justify-between">
+                                <dt class="text-sm font-medium text-gray-500">Account Name</dt>
+                                <dd class="text-sm text-gray-900">{{ bank_details.account_name }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">Important Notes</h3>
+                    <div class="mt-4 text-sm text-gray-600">
+                        <ul class="list-disc pl-5 space-y-2">
+                            <li>Please use the exact reference number when making the transfer</li>
+                            <li>Your order will be processed once the payment is confirmed</li>
+                            <li>Payment confirmation may take up to 24 hours</li>
+                            <li>Keep your transfer receipt for reference</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-center space-x-4">
+                <a href="{% url 'link:payment_status' transaction.reference %}"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    Check Payment Status
+                </a>
+                <a href="{% url 'link:product_list' %}"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    Continue Shopping
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

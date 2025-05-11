@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Failed - AgroLink{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="text-center">
+            <i class="fas fa-times-circle text-6xl text-red-600 mb-4"></i>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Payment Failed
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                We're sorry, but your payment could not be processed.
+            </p>
+            {% if error_message %}
+            <p class="mt-2 text-center text-sm text-red-600">
+                {{ error_message }}
+            </p>
+            {% endif %}
+        </div>
+
+        <div class="mt-8 bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">What happened?</h3>
+                    <div class="mt-4 text-sm text-gray-600">
+                        <p>There could be several reasons for the payment failure:</p>
+                        <ul class="mt-2 list-disc list-inside">
+                            <li>Insufficient funds in your account</li>
+                            <li>Card details entered incorrectly</li>
+                            <li>Card expired or invalid</li>
+                            <li>Bank declined the transaction</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">What can you do?</h3>
+                    <div class="mt-4 text-sm text-gray-600">
+                        <p>You can try the following:</p>
+                        <ul class="mt-2 list-disc list-inside">
+                            <li>Check your card details and try again</li>
+                            <li>Use a different payment method</li>
+                            <li>Contact your bank for more information</li>
+                            <li>Contact our support team for assistance</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-center space-x-4">
+                <a href="{% url 'link:checkout' %}"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    Try Again
+                </a>
+                <a href="{% url 'link:product_list' %}"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    Return to Shop
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
