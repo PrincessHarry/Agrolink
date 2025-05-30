@@ -31,7 +31,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-1r!q8*jhqrilw78*ay@z#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['agrolink.onrender.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['agrolink-kujf.onrender.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
