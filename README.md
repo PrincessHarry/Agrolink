@@ -125,22 +125,7 @@ redis-server
 daphne Agrolink.asgi:application
 ```
 
-## Project Structure
 
-```
-agrolink/
-├── Agrolink/              # Project settings
-├── link/                  # Main application
-│   ├── templates/        # HTML templates
-│   ├── static/          # Static files
-│   ├── migrations/      # Database migrations
-│   └── ...
-├── media/                # User-uploaded files
-├── staticfiles/         # Collected static files
-├── .env                 # Environment variables
-├── requirements.txt     # Project dependencies
-└── manage.py           # Django management script
-```
 
 ## API Endpoints
 
@@ -158,17 +143,12 @@ agrolink/
 4. Push to the branch
 5. Create a Pull Request
 
-## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-For support, email support@agrolink.com or create an issue in the repository.
 
 ## Acknowledgments
 
 - Django Documentation
 - Paystack API Documentation
 - Tailwind CSS
-- Django Channels 
+- Django Channels
+

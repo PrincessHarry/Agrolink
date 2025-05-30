@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -28,9 +29,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-1r!q8*jhqrilw78*ay@z#tjca@zw6_46(^ozk_wu7%0cx&46^+')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = True
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = ['agrolink.onrender.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -71,6 +72,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'link.views.global_user_context',
             ],
         },
     },
@@ -124,7 +126,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
@@ -142,17 +144,17 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
 CRISPY_TEMPLATE_PACK = "tailwind"
 
 # Login/Logout URLs
-LOGIN_REDIRECT_URL = 'link:home'
-LOGOUT_REDIRECT_URL = 'link:home'
+LOGIN_REDIRECT_URL = 'link:product_list'
+LOGOUT_REDIRECT_URL = 'link:login'
 LOGIN_URL = 'login'
 
 # Channels Configuration
 ASGI_APPLICATION = 'Agrolink.asgi.application'
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
         },
     },
 }
@@ -170,3 +172,30 @@ PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY', '')
 PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY', '')
 PAYSTACK_CURRENCY = os.environ.get('PAYSTACK_CURRENCY', 'NGN')
 PAYSTACK_WEBHOOK_SECRET = os.environ.get('PAYSTACK_WEBHOOK_SECRET', '')
+
+# Security settings
+# SECURE_SSL_REDIRECT = True
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True
+# SECURE_BROWSER_XSS_FILTER = True
+# SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# Remove Redis from CACHES and SESSION_ENGINE
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+
+# Use database sessions instead of cache
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+# Keep Redis only for Channel Layers (WebSocket)
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}

@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import UserProfile, Product, Message, Review
+from .models import UserProfile, Product, Message, Review, Category
 
 class UserRegistrationForm(UserCreationForm):
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={
@@ -81,32 +81,49 @@ class UserProfileForm(forms.ModelForm):
         }
 
 class ProductForm(forms.ModelForm):
+    new_category = forms.CharField(
+        required=False,
+        label='If Other, specify',
+        widget=forms.TextInput(attrs={
+            'class': 'h-12 shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md px-3',
+            'placeholder': 'Enter new category',
+            'id': 'id_new_category',
+        })
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        categories = [(cat.id, cat.name) for cat in Category.objects.all()]
+        categories.append(('other', 'Other'))
+        self.fields['category'].choices = categories
+
     class Meta:
         model = Product
         fields = ('name', 'description', 'category', 'price', 'quantity', 'unit', 'image')
         widgets = {
             'name': forms.TextInput(attrs={
-                'class': 'shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md',
+                'class': 'h-12 shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md px-3',
                 'placeholder': 'Enter product name'
             }),
             'description': forms.Textarea(attrs={
-                'class': 'shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md',
+                'class': 'shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md px-3',
                 'rows': 4,
                 'placeholder': 'Enter product description'
             }),
             'category': forms.Select(attrs={
-                'class': 'mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md'
+                'class': 'h-12 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md',
+                'id': 'id_category',
             }),
             'price': forms.NumberInput(attrs={
-                'class': 'shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md',
+                'class': 'h-12 shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md px-3',
                 'placeholder': 'Enter price'
             }),
             'quantity': forms.NumberInput(attrs={
-                'class': 'shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md',
+                'class': 'h-12 shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md px-3',
                 'placeholder': 'Enter quantity'
             }),
             'unit': forms.TextInput(attrs={
-                'class': 'shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md',
+                'class': 'h-12 shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md px-3',
                 'placeholder': 'Enter unit (e.g., kg, piece)'
             }),
             'image': forms.FileInput(attrs={

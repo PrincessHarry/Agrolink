@@ -16,10 +16,14 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.db.models.functions import Coalesce
+from django.contrib.auth.views import LoginView
+from django.template.context_processors import request
+from django.utils.text import slugify
+from decimal import Decimal
 
 # Homepage View
 def home(request):
-    featured_products = Product.objects.filter(is_available=True).order_by('-created_at')[:6]
+    featured_products = Product.objects.filter(status='available').order_by('-created_at')[:6]
     context = {
         'featured_products': featured_products,
     }
@@ -32,7 +36,7 @@ def register(request):
         if form.is_valid():
             user = form.save()
             messages.success(request, 'Account created successfully! You can now log in.')
-            return redirect('login')
+            return redirect('link:login')
     else:
         form = UserRegistrationForm()
     return render(request, 'link/register.html', {'form': form})
@@ -131,15 +135,19 @@ def product_list(request):
     context = {
         'products': products,
         'categories': categories,
+        'selected_categories': request.GET.getlist('category'),
     }
     return render(request, 'link/product_list.html', context)
 
 @login_required
 def product_detail(request, slug):
-    product = get_object_or_404(Product, slug=slug, is_available=True)
+    product = get_object_or_404(Product, slug=slug, status='available')
+    if not product.slug:
+        messages.error(request, 'Product slug is missing.')
+        return redirect('link:product_list')
     related_products = Product.objects.filter(
         category=product.category,
-        is_available=True
+        status='available'
     ).exclude(id=product.id)[:4]
     
     context = {
@@ -158,7 +166,27 @@ def add_product(request):
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save(commit=False)
-            product.farmer = request.user.userprofile
+            # Handle 'Other' category
+            category_value = form.cleaned_data['category']
+            if category_value == 'other':
+                new_cat_name = form.cleaned_data['new_category'].strip()
+                if new_cat_name:
+                    # Create new category if it doesn't exist
+                    category, created = Category.objects.get_or_create(
+                        name=new_cat_name,
+                        defaults={'slug': slugify(new_cat_name)}
+                    )
+                    product.category = category
+                else:
+                    form.add_error('new_category', 'Please specify a new category.')
+                    return render(request, 'link/add_product.html', {'form': form})
+            else:
+                if isinstance(category_value, Category):
+                    product.category = category_value
+                else:
+                    product.category_id = int(category_value)
+            product.seller = request.user
+            product.slug = slugify(product.name)
             product.save()
             messages.success(request, 'Product added successfully.')
             return redirect('link:product_detail', slug=product.slug)
@@ -170,7 +198,7 @@ def add_product(request):
 @login_required
 def edit_product(request, slug):
     product = get_object_or_404(Product, slug=slug)
-    if request.user.userprofile != product.farmer:
+    if request.user.userprofile != product.seller:
         messages.error(request, 'You can only edit your own products.')
         return redirect('link:product_list')
     
@@ -188,7 +216,7 @@ def edit_product(request, slug):
 @login_required
 def delete_product(request, slug):
     product = get_object_or_404(Product, slug=slug)
-    if request.user.userprofile != product.farmer:
+    if request.user.userprofile != product.seller:
         messages.error(request, 'You can only delete your own products.')
         return redirect('link:product_list')
     
@@ -244,12 +272,14 @@ def order_detail(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     
     # Check if user has permission to view this order
-    if request.user.userprofile not in [order.buyer, order.product.farmer]:
+    order_item = order.items.first()
+    if not order_item or request.user.userprofile not in [order.buyer, order_item.product.seller]:
         messages.error(request, 'You do not have permission to view this order.')
         return redirect('link:order_list')
     
     context = {
         'order': order,
+        'order_item': order_item,
         'status_choices': dict(Order.STATUS_CHOICES),
     }
     return render(request, 'link/order_detail.html', context)
@@ -262,7 +292,8 @@ def create_order(request, product_id):
         return redirect('link:product_detail', slug=product.slug)
     
     if request.method == 'POST':
-        quantity = float(request.POST.get('quantity', 0))
+        from decimal import Decimal
+        quantity = Decimal(str(request.POST.get('quantity', 0)))
         if quantity <= 0:
             messages.error(request, 'Please enter a valid quantity.')
             return redirect('link:product_detail', slug=product.slug)
@@ -302,7 +333,7 @@ def update_order_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     
     # Check if user is the farmer who owns the product
-    if request.user.userprofile != order.product.farmer:
+    if request.user.userprofile != order.product.seller:
         messages.error(request, 'You do not have permission to update this order.')
         return redirect('link:order_list')
     
@@ -327,7 +358,7 @@ def update_payment_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     
     # Check if user is the farmer who owns the product
-    if request.user.userprofile != order.product.farmer:
+    if request.user.userprofile != order.product.seller:
         messages.error(request, 'You do not have permission to update this order.')
         return redirect('link:order_list')
     
@@ -374,7 +405,7 @@ def update_order_tracking(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     
     # Check if user is the farmer who owns the product
-    if request.user.userprofile != order.product.farmer:
+    if request.user.userprofile != order.product.seller:
         messages.error(request, 'You do not have permission to update this order.')
         return redirect('link:order_list')
     
@@ -730,3 +761,26 @@ def delete_review(request, review_id):
     return render(request, 'link/delete_review.html', {
         'review': review
     })
+
+class CustomLoginView(LoginView):
+    template_name = 'link/login.html'
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f"Welcome, {self.request.user.username}! Start by browsing products or, if you're a farmer, add your first product!")
+        return response
+
+def global_user_context(request):
+    unread_message_count = 0
+    user_profile = None
+    if request.user.is_authenticated:
+        try:
+            user_profile = request.user.userprofile
+            from .models import Message
+            unread_message_count = Message.objects.filter(receiver=user_profile, is_read=False).count()
+        except Exception:
+            pass
+    return {
+        'unread_message_count': unread_message_count,
+        'user_profile': user_profile,
+    }

@@ -1,12 +1,13 @@
-{% extends 'link/base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}AgroLink - Home{% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
 <div class="relative bg-white overflow-hidden">
-    <div class="max-w-7xl mx-auto">
-        <div class="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
+    <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center">
+        <!-- Text Section -->
+        <div class="z-10 bg-white w-full lg:w-1/2 pb-8 sm:pb-16 md:pb-20 lg:pb-28 xl:pb-32 flex flex-col justify-center">
             <main class="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
                 <div class="sm:text-center lg:text-left">
                     <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
@@ -17,11 +18,13 @@
                         Join our platform to buy fresh produce directly from farmers or sell your agricultural products to a wider market.
                     </p>
                     <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
+                        {% if not user.is_authenticated %}
                         <div class="rounded-md shadow">
                             <a href="{% url 'link:register' %}" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 md:py-4 md:text-lg md:px-10 transition-colors duration-200">
                                 Get Started
                             </a>
                         </div>
+                        {% endif %}
                         <div class="mt-3 sm:mt-0 sm:ml-3">
                             <a href="{% url 'link:product_list' %}" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 md:py-4 md:text-lg md:px-10 transition-colors duration-200">
                                 Browse Products
@@ -31,9 +34,11 @@
                 </div>
             </main>
         </div>
-    </div>
-    <div class="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
-        <img class="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full" src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2232&q=80" alt="Fresh produce">
+        <!-- Image Section -->
+        <div class="w-full lg:w-1/2 flex justify-center items-center p-4 lg:p-0 h-full">
+            {% load static %}
+            <img class="w-full h-56 sm:h-72 md:h-96 lg:h-full object-contain object-center" src="{% static 'images/farmer 1.png' %}" alt="Farmer">
+        </div>
     </div>
 </div>
 
@@ -112,13 +117,23 @@
 
         <div class="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
             {% for product in featured_products %}
+            {% if product.slug %}
             <a href="{% url 'link:product_detail' slug=product.slug %}" class="group" x-data="{ hover: false }" @mouseenter="hover = true" @mouseleave="hover = false">
                 <div class="w-full aspect-w-1 aspect-h-1 bg-gray-200 rounded-lg overflow-hidden xl:aspect-w-7 xl:aspect-h-8">
                     <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-center object-cover transition-transform duration-200" :class="{ 'scale-105': hover }">
                 </div>
                 <h3 class="mt-4 text-sm text-gray-700">{{ product.name }}</h3>
-                <p class="mt-1 text-lg font-medium text-gray-900">${{ product.price }}</p>
+                <p class="mt-1 text-lg font-medium text-gray-900">₦{{ product.price }}</p>
             </a>
+            {% else %}
+            <div class="group">
+                <div class="w-full aspect-w-1 aspect-h-1 bg-gray-200 rounded-lg overflow-hidden xl:aspect-w-7 xl:aspect-h-8">
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-center object-cover transition-transform duration-200" :class="{ 'scale-105': hover }">
+                </div>
+                <h3 class="mt-4 text-sm text-gray-700">{{ product.name }}</h3>
+                <p class="mt-1 text-lg font-medium text-gray-900">₦{{ product.price }}</p>
+            </div>
+            {% endif %}
             {% endfor %}
         </div>
 

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Agrolink{% endblock %}</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-green-600 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <a href="{% url 'link:home' %}" class="text-2xl font-bold">Agrolink</a>
+                </div>
+                <div class="hidden md:flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'link:product_list' %}" class="hover:text-green-200">Products</a>
+                        <a href="{% url 'link:order_list' %}" class="hover:text-green-200">Orders</a>
+                        <a href="{% url 'link:conversations' %}" class="hover:text-green-200 relative">
+                            Messages
+                            {% if unread_message_count > 0 %}
+                                <span class="absolute -top-2 -right-3 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">{{ unread_message_count }}</span>
+                            {% endif %}
+                        </a>
+                        <a href="{% url 'link:profile' %}" class="hover:text-green-200 flex items-center space-x-2">
+                            <span class="inline-block h-8 w-8 rounded-full bg-green-200 text-green-800 flex items-center justify-center font-bold">{{ user.username|first|upper }}</span>
+                            <span class="font-medium">{{ user.get_full_name|default:user.username }}</span>
+                        </a>
+                        <form method="post" action="{% url 'link:logout' %}" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="hover:text-green-200">Logout</button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'link:login' %}" class="hover:text-green-200">Login</a>
+                        <a href="{% url 'link:register' %}" class="hover:text-green-200">Register</a>
+                    {% endif %}
+                </div>
+                <div class="flex items-center md:hidden">
+                    <button id="mobile-menu-button" class="text-white focus:outline-none">
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="mobile-menu" class="md:hidden hidden bg-green-600 text-white px-4 pt-2 pb-4 space-y-2 rounded-b-lg">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'link:product_list' %}" class="block py-2">Products</a>
+                    <a href="{% url 'link:order_list' %}" class="block py-2">Orders</a>
+                    <a href="{% url 'link:conversations' %}" class="block py-2 relative">
+                        Messages
+                        {% if unread_message_count > 0 %}
+                            <span class="absolute top-1 right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">{{ unread_message_count }}</span>
+                        {% endif %}
+                    </a>
+                    <a href="{% url 'link:profile' %}" class="block py-2">Profile</a>
+                    <form method="post" action="{% url 'link:logout' %}" class="block">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full text-left py-2">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'link:login' %}" class="block py-2">Login</a>
+                    <a href="{% url 'link:register' %}" class="block py-2">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="max-w-7xl mx-auto px-4 mt-4">
+            {% for message in messages %}
+                <div class="p-4 mb-4 rounded-lg {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-green-600 text-white mt-auto">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <p>&copy; 2024 Agrolink. All rights reserved.</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="hover:text-green-200">About</a>
+                    <a href="#" class="hover:text-green-200">Contact</a>
+                    <a href="#" class="hover:text-green-200">Privacy Policy</a>
+                    <a href="#" class="hover:text-green-200">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    {% block extra_js %}{% endblock %}
+    <script>
+        const menuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        menuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html> 

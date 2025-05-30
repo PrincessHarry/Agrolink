@@ -1,131 +1,92 @@
-{% extends 'base.html' %}
+{% extends 'link/base.html' %}
+{% load static %}
 
 {% block title %}{{ product.name }} - AgroLink{% endblock %}
 
 {% block content %}
-<div class="bg-white">
-    <div class="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-        <div class="lg:grid lg:grid-cols-2 lg:gap-x-8 lg:items-start">
-            <!-- Image gallery -->
-            <div class="flex flex-col-reverse">
-                <div class="w-full aspect-w-1 aspect-h-1 rounded-lg overflow-hidden">
-                    <img src="{{ product.image.url }}" alt="{{ product.name }}"
-                        class="w-full h-full object-center object-cover">
-                </div>
-            </div>
-
-            <!-- Product info -->
-            <div class="mt-10 px-4 sm:px-0 sm:mt-16 lg:mt-0">
-                <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">{{ product.name }}</h1>
-
-                <div class="mt-3">
-                    <h2 class="sr-only">Product information</h2>
-                    <p class="text-3xl text-gray-900">${{ product.price }}</p>
-                </div>
-
-                <!-- Reviews -->
-                <div class="mt-3">
-                    <h3 class="sr-only">Reviews</h3>
-                    <div class="flex items-center">
-                        <div class="flex items-center">
-                            <!-- Add star rating here if implemented -->
-                        </div>
-                        <p class="sr-only">4 out of 5 stars</p>
-                    </div>
-                </div>
-
-                <div class="mt-6">
-                    <h3 class="sr-only">Description</h3>
-                    <div class="text-base text-gray-700 space-y-6">
-                        <p>{{ product.description }}</p>
-                    </div>
-                </div>
-
-                <div class="mt-6">
-                    <div class="flex items-center">
-                        <h3 class="text-sm text-gray-600">Category:</h3>
-                        <p class="ml-2 text-sm text-gray-900">{{ product.get_category_display }}</p>
-                    </div>
-                    <div class="mt-2 flex items-center">
-                        <h3 class="text-sm text-gray-600">Available:</h3>
-                        <p class="ml-2 text-sm text-gray-900">{{ product.quantity }} {{ product.unit }}</p>
-                    </div>
-                    <div class="mt-2 flex items-center">
-                        <h3 class="text-sm text-gray-600">Seller:</h3>
-                        <p class="ml-2 text-sm text-gray-900">{{ product.farmer.user.username }}</p>
-                    </div>
-                </div>
-
-                <div class="mt-6">
-                    {% if user.is_authenticated and user.userprofile.user_type == 'buyer' %}
-                    <form method="POST" action="{% url 'link:create_order' product.slug %}" class="mt-6">
-                        {% csrf_token %}
-                        <div class="mt-1 flex rounded-md shadow-sm">
-                            <input type="number" name="quantity" min="0.1" step="0.1" max="{{ product.quantity }}"
-                                class="focus:ring-green-500 focus:border-green-500 flex-1 block w-full rounded-none rounded-l-md sm:text-sm border-gray-300"
-                                placeholder="Enter quantity">
-                            <span
-                                class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
-                                {{ product.unit }}
-                            </span>
-                        </div>
-                        <button type="submit"
-                            class="mt-6 w-full bg-green-600 border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                            Place Order
-                        </button>
-                    </form>
-                    {% elif not user.is_authenticated %}
-                    <a href="{% url 'login' %}?next={{ request.path }}"
-                        class="mt-6 w-full bg-green-600 border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                        Sign in to Order
-                    </a>
-                    {% endif %}
-                </div>
-
-                {% if user.is_authenticated and user.userprofile == product.farmer %}
-                <div class="mt-6 flex space-x-3">
-                    <a href="{% url 'link:edit_product' product.slug %}"
-                        class="flex-1 bg-white border border-gray-300 rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                        Edit Product
-                    </a>
-                    <a href="{% url 'link:delete_product' product.slug %}"
-                        class="flex-1 bg-red-600 border border-transparent rounded-md py-3 px-8 flex items-center justify-center text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                        Delete Product
-                    </a>
-                </div>
-                {% endif %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Product Image -->
+        <div class="col-md-6">
+            <div class="card">
+                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
             </div>
         </div>
 
-        <!-- Related products -->
-        {% if related_products %}
-        <div class="mt-16">
-            <h2 class="text-2xl font-extrabold tracking-tight text-gray-900">Related Products</h2>
-            <div class="mt-6 grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
-                {% for related_product in related_products %}
-                <div class="group relative">
-                    <div class="w-full min-h-80 bg-gray-200 aspect-w-1 aspect-h-1 rounded-md overflow-hidden group-hover:opacity-75 lg:h-80 lg:aspect-none">
-                        <img src="{{ related_product.image.url }}" alt="{{ related_product.name }}"
-                            class="w-full h-full object-center object-cover lg:w-full lg:h-full">
-                    </div>
-                    <div class="mt-4 flex justify-between">
-                        <div>
-                            <h3 class="text-sm text-gray-700">
-                                <a href="{% url 'link:product_detail' related_product.slug %}">
-                                    <span aria-hidden="true" class="absolute inset-0"></span>
-                                    {{ related_product.name }}
-                                </a>
-                            </h3>
-                            <p class="mt-1 text-sm text-gray-500">{{ related_product.get_category_display }}</p>
-                        </div>
-                        <p class="text-sm font-medium text-gray-900">${{ related_product.price }}</p>
-                    </div>
+        <!-- Product Details -->
+        <div class="col-md-6">
+            <h1 class="mb-3">{{ product.name }}</h1>
+            <p class="text-muted">Category: {{ product.category.name }}</p>
+            
+            <div class="mb-3">
+                <h3 class="text-primary">₦{{ product.price }}</h3>
+                <p class="text-muted">Quantity Available: {{ product.quantity }} {{ product.unit }}</p>
+            </div>
+
+            <div class="mb-4">
+                <h4>Description</h4>
+                <p>{{ product.description }}</p>
+            </div>
+
+            <!-- Buy Button -->
+            {% if product.status == 'available' %}
+                <form action="{% url 'link:create_order' product.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-shopping-cart"></i> Buy Now
+                    </button>
+                </form>
+            {% else %}
+                <button class="btn btn-secondary btn-lg" disabled>
+                    {{ product.status|title }}
+                </button>
+            {% endif %}
+
+            <!-- Seller Information -->
+            <div class="mt-4">
+                <h4>Seller Information</h4>
+                <p>Seller: {{ product.seller.username }}</p>
+            </div>
+
+            <!-- Reviews Section -->
+            <div class="mt-4">
+                <h4>Reviews</h4>
+                <div class="rating">
+                    <span class="text-warning">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= product.get_rating %}
+                                <i class="fas fa-star"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </span>
+                    <span class="text-muted">({{ product.get_review_count }} reviews)</span>
                 </div>
-                {% endfor %}
             </div>
         </div>
-        {% endif %}
     </div>
+
+    <!-- Related Products -->
+    {% if related_products %}
+    <div class="mt-5">
+        <h3>Related Products</h3>
+        <div class="row">
+            {% for related in related_products %}
+            <div class="col-md-3">
+                <div class="card">
+                    <img src="{{ related.image.url }}" class="card-img-top" alt="{{ related.name }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ related.name }}</h5>
+                        <p class="card-text">₦{{ related.price }}</p>
+                        <a href="{% url 'link:product_detail' related.slug %}" class="btn btn-outline-primary">View Details</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <!-- Reviews Section -->

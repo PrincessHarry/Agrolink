@@ -38,6 +38,26 @@
                 </div>
             </div>
 
+            <!-- Order Progress Bar -->
+            <div class="mb-8">
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div class="h-3 rounded-full transition-all duration-500
+                        {% if order.status == 'pending' %}bg-yellow-400 w-1/4
+                        {% elif order.status == 'confirmed' %}bg-blue-400 w-2/4
+                        {% elif order.status == 'shipped' %}bg-purple-400 w-3/4
+                        {% elif order.status == 'delivered' %}bg-green-500 w-full
+                        {% else %}bg-red-400 w-1/4
+                        {% endif %}">
+                    </div>
+                </div>
+                <div class="flex justify-between text-xs mt-2 text-gray-500">
+                    <span class="{% if order.status == 'pending' %}text-yellow-600 font-bold{% endif %}">Pending</span>
+                    <span class="{% if order.status == 'confirmed' %}text-blue-600 font-bold{% endif %}">Confirmed</span>
+                    <span class="{% if order.status == 'shipped' %}text-purple-600 font-bold{% endif %}">Shipped</span>
+                    <span class="{% if order.status == 'delivered' %}text-green-600 font-bold{% endif %}">Delivered</span>
+                </div>
+            </div>
+
             <!-- Order Details -->
             <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6">
@@ -48,30 +68,30 @@
                 <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
                     <div class="flex items-center">
                         <div class="h-16 w-16 flex-shrink-0">
-                            <img class="h-16 w-16 rounded-lg object-cover" src="{{ order.product.image.url }}"
-                                alt="{{ order.product.name }}">
+                            <img class="h-16 w-16 rounded-lg object-cover" src="{{ order_item.product.image.url }}"
+                                alt="{{ order_item.product.name }}">
                         </div>
                         <div class="ml-4">
-                            <h4 class="text-lg font-medium text-gray-900">{{ order.product.name }}</h4>
-                            <p class="text-sm text-gray-500">{{ order.get_category_display }}</p>
+                            <h4 class="text-lg font-medium text-gray-900">{{ order_item.product.name }}</h4>
+                            <p class="text-sm text-gray-500">{{ order_item.product.category.name }}</p>
                         </div>
                     </div>
                     <dl class="mt-6 grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Quantity</dt>
-                            <dd class="mt-1 text-sm text-gray-900">{{ order.quantity }} {{ order.product.unit }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900">{{ order_item.quantity }} {{ order_item.product.unit }}</dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Price per unit</dt>
-                            <dd class="mt-1 text-sm text-gray-900">${{ order.product.price }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900">₦{{ order_item.price }}</dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Total Amount</dt>
-                            <dd class="mt-1 text-sm text-gray-900">${{ order.total_price }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900">₦{{ order.total_price }}</dd>
                         </div>
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Seller</dt>
-                            <dd class="mt-1 text-sm text-gray-900">{{ order.product.farmer.user.username }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900">{{ order_item.product.seller.user.username }}</dd>
                         </div>
                     </dl>
                 </div>
@@ -207,7 +227,7 @@
                     </button>
                 </form>
                 {% endif %}
-                {% if user.userprofile == order.product.farmer %}
+                {% if user.userprofile == order_item.product.seller %}
                 <form method="POST" action="{% url 'link:update_order_status' order.id %}" class="inline">
                     {% csrf_token %}
                     <select name="status"
