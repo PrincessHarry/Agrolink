@@ -91,6 +91,10 @@ DATABASES = {
     }
 }
 
+# In production, use a different database path
+if not DEBUG:
+    DATABASES['default']['NAME'] = os.path.join(os.environ.get('HOME', BASE_DIR), '.sqlite', 'db.sqlite3')
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
