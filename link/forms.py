@@ -81,22 +81,6 @@ class UserProfileForm(forms.ModelForm):
         }
 
 class ProductForm(forms.ModelForm):
-    new_category = forms.CharField(
-        required=False,
-        label='If Other, specify',
-        widget=forms.TextInput(attrs={
-            'class': 'h-12 shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md px-3',
-            'placeholder': 'Enter new category',
-            'id': 'id_new_category',
-        })
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        categories = [(cat.id, cat.name) for cat in Category.objects.all()]
-        categories.append(('other', 'Other'))
-        self.fields['category'].choices = categories
-
     class Meta:
         model = Product
         fields = ('name', 'description', 'category', 'price', 'quantity', 'unit', 'image')

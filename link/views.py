@@ -60,7 +60,9 @@ def edit_profile(request):
     if request.method == 'POST':
         form = UserProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
-            form.save()
+            profile = form.save(commit=False)
+            profile.user = request.user  # Set the user relationship
+            profile.save()
             messages.success(request, 'Profile updated successfully!')
             return redirect('link:profile')
     else:
@@ -72,7 +74,6 @@ def edit_profile(request):
 def product_list(request):
     # Get all products
     products = Product.objects.all()
-    categories = Category.objects.all()
 
     # Search
     search_query = request.GET.get('search', '')
@@ -80,13 +81,13 @@ def product_list(request):
         products = products.filter(
             Q(name__icontains=search_query) |
             Q(description__icontains=search_query) |
-            Q(category__name__icontains=search_query)
+            Q(category__icontains=search_query)
         )
 
     # Category filter
-    category_ids = request.GET.getlist('category')
-    if category_ids:
-        products = products.filter(category_id__in=category_ids)
+    category = request.GET.get('category')
+    if category:
+        products = products.filter(category=category)
 
     # Price range filter
     min_price = request.GET.get('min_price')
@@ -134,8 +135,8 @@ def product_list(request):
 
     context = {
         'products': products,
-        'categories': categories,
-        'selected_categories': request.GET.getlist('category'),
+        'categories': Product.CATEGORY_CHOICES,
+        'selected_category': category,
     }
     return render(request, 'link/product_list.html', context)
 
@@ -166,25 +167,6 @@ def add_product(request):
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save(commit=False)
-            # Handle 'Other' category
-            category_value = form.cleaned_data['category']
-            if category_value == 'other':
-                new_cat_name = form.cleaned_data['new_category'].strip()
-                if new_cat_name:
-                    # Create new category if it doesn't exist
-                    category, created = Category.objects.get_or_create(
-                        name=new_cat_name,
-                        defaults={'slug': slugify(new_cat_name)}
-                    )
-                    product.category = category
-                else:
-                    form.add_error('new_category', 'Please specify a new category.')
-                    return render(request, 'link/add_product.html', {'form': form})
-            else:
-                if isinstance(category_value, Category):
-                    product.category = category_value
-                else:
-                    product.category_id = int(category_value)
             product.seller = request.user
             product.slug = slugify(product.name)
             product.save()
@@ -287,28 +269,42 @@ def order_detail(request, order_id):
 @login_required
 def create_order(request, product_id):
     product = get_object_or_404(Product, id=product_id)
-    if request.user.userprofile.user_type != 'buyer':
-        messages.error(request, 'Only buyers can place orders.')
-        return redirect('link:product_detail', slug=product.slug)
+    
+    # Check if user has a profile
+    try:
+        user_profile = request.user.userprofile
+    except UserProfile.DoesNotExist:
+        messages.error(request, 'Please complete your profile before placing an order.')
+        return redirect('link:edit_profile')
+    
+    # Check if product is available
+    if product.status != 'available':
+        messages.error(request, 'This product is not available for purchase.')
+        return redirect('link:product_list')
+    
+    # Check if user is trying to buy their own product
+    if product.seller == request.user:
+        messages.error(request, 'You cannot buy your own product.')
+        return redirect('link:product_list')
     
     if request.method == 'POST':
         from decimal import Decimal
         quantity = Decimal(str(request.POST.get('quantity', 0)))
         if quantity <= 0:
             messages.error(request, 'Please enter a valid quantity.')
-            return redirect('link:product_detail', slug=product.slug)
+            return redirect('link:product_list')
         
         if quantity > product.quantity:
             messages.error(request, 'Requested quantity not available.')
-            return redirect('link:product_detail', slug=product.slug)
+            return redirect('link:product_list')
         
         total_price = product.price * quantity
         
         # Create the order
         order = Order.objects.create(
-            buyer=request.user.userprofile,
+            buyer=user_profile,
             total_price=total_price,
-            shipping_address=request.user.userprofile.address
+            shipping_address=user_profile.address
         )
         
         # Create the order item
@@ -321,6 +317,8 @@ def create_order(request, product_id):
         
         # Update product quantity
         product.quantity -= quantity
+        if product.quantity == 0:
+            product.status = 'sold_out'
         product.save()
         
         messages.success(request, 'Order placed successfully!')
