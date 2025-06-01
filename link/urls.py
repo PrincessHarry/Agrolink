@@ -48,9 +48,8 @@ urlpatterns = [
 
     # Payment URLs
     path('order/<int:order_id>/payment/', views.initiate_payment, name='initiate_payment'),
-    path('order/<int:order_id>/payment/verify/', views.verify_payment, name='payment_verify'),
-    path('order/<int:order_id>/payment/status/', views.payment_status, name='payment_status'),
-    path('payment/webhook/', webhooks.paystack_webhook, name='payment_webhook'),
+    path('payment/verify/<int:order_id>/', views.verify_payment, name='verify_payment'),
+    path('payment/webhook/', views.paystack_webhook, name='paystack_webhook'),
     path('payment/success/', views.payment_success, name='payment_success'),
     path('payment/failed/', views.payment_failed, name='payment_failed'),
 

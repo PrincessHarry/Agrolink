@@ -208,9 +208,12 @@
 
                     {% if user.userprofile == order.buyer and order.payment_status != 'paid' %}
                     <div class="mt-6">
-                        <button onclick="initiatePayment()" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                            Pay Now
-                        </button>
+                        <form method="POST" action="{% url 'link:initiate_payment' order.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                Pay Now
+                            </button>
+                        </form>
                     </div>
                     {% endif %}
                 </div>
@@ -255,46 +258,60 @@
 
 {% block extra_js %}
 <script>
+// Payment status check
+function checkPaymentStatus() {
+    const statusElement = document.querySelector('.payment-status');
+    if (!statusElement) return;
+
+    fetch(`/payment/status/${statusElement.dataset.reference}/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.reload();
+            }
+        })
+        .catch(error => console.error('Status check error:', error));
+}
+
+// Check payment status every 5 seconds if payment is pending
+{% if order.payment_status == 'pending' and order.transactions.exists %}
+setInterval(checkPaymentStatus, 5000);
+{% endif %}
+
 function initiatePayment() {
-    fetch(`/order/{{ order.id }}/payment/`, {
+    // Show loading state
+    const payButton = document.querySelector('button[onclick="initiatePayment()"]');
+    const originalText = payButton.innerHTML;
+    payButton.innerHTML = 'Processing...';
+    payButton.disabled = true;
+
+    // Make API call to initiate payment
+    fetch(`/order/${order.id}/payment/`, {
         method: 'POST',
         headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'X-CSRFToken': '{{ csrf_token }}',
             'Content-Type': 'application/json'
         }
     })
     .then(response => response.json())
     .then(data => {
-        if (data.status === 'success') {
+        if (data.status) {
+            // Redirect to Paystack payment page
             window.location.href = data.data.authorization_url;
         } else {
-            alert('Failed to initialize payment. Please try again.');
+            // Show error message
+            alert(data.message || 'Failed to initialize payment. Please try again.');
+            payButton.innerHTML = originalText;
+            payButton.disabled = false;
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred. Please try again.');
+        console.error('Payment Error:', error);
+        alert('An error occurred while processing your payment. Please try again.');
+        payButton.innerHTML = originalText;
+        payButton.disabled = false;
     });
 }
-
-// Poll payment status every 5 seconds if payment is pending
-{% if order.payment_status == 'pending' %}
-function checkPaymentStatus() {
-    fetch(`/order/{{ order.id }}/payment/status/`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success' && data.data.payment_status === 'success') {
-                window.location.reload();
-            }
-        })
-        .catch(error => console.error('Error:', error));
-}
-
-// Start polling when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    setInterval(checkPaymentStatus, 5000);
-});
-{% endif %}
 </script>
 {% endblock %}
 

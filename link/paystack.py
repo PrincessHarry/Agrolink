@@ -14,20 +14,38 @@ class PaystackAPI:
             "Content-Type": "application/json"
         }
 
-    def initialize_transaction(self, email, amount, reference, callback_url):
+    def initialize_transaction(self, email, amount, reference, callback_url, metadata=None):
         """Initialize a new transaction"""
-        url = f"{self.base_url}/transaction/initialize"
-        data = {
-            "email": email,
-            "amount": int(amount * 100),  # Convert to kobo
-            "reference": reference,
-            "callback_url": callback_url,
-            "currency": settings.PAYSTACK_CURRENCY,
-            "channels": ["card", "bank", "ussd", "qr", "mobile_money", "bank_transfer"]
-        }
-        
-        response = requests.post(url, json=data, headers=self.headers)
-        return response.json()
+        try:
+            url = f"{self.base_url}/transaction/initialize"
+            data = {
+                "email": email,
+                "amount": int(amount * 100),  # Convert to kobo
+                "reference": reference,
+                "callback_url": callback_url,
+                "currency": settings.PAYSTACK_CURRENCY,
+                "channels": ["card", "bank", "ussd", "qr", "mobile_money", "bank_transfer"]
+            }
+            
+            if metadata:
+                data["metadata"] = metadata
+            
+            response = requests.post(url, json=data, headers=self.headers)
+            response.raise_for_status()
+            return response.json()
+            
+        except requests.exceptions.RequestException as e:
+            print(f"Paystack API Error: {str(e)}")
+            return {
+                'status': False,
+                'message': f'Error connecting to payment gateway: {str(e)}'
+            }
+        except Exception as e:
+            print(f"Unexpected Error: {str(e)}")
+            return {
+                'status': False,
+                'message': 'An unexpected error occurred'
+            }
 
     def verify_transaction(self, reference):
         """Verify a transaction"""

@@ -20,6 +20,10 @@ from django.contrib.auth.views import LoginView
 from django.template.context_processors import request
 from django.utils.text import slugify
 from decimal import Decimal
+import hmac
+import hashlib
+import json
+from django.http import HttpResponse
 
 # Homepage View
 def home(request):
@@ -618,40 +622,56 @@ def filter_messages(request):
 @login_required
 def initiate_payment(request, order_id):
     """Initiate payment process"""
-    order = get_object_or_404(Order, id=order_id)
-    
-    # Create payment transaction
-    transaction = create_payment_transaction(order)
-    
-    # Initialize Paystack transaction
-    paystack = PaystackAPI()
-    callback_url = request.build_absolute_uri(
-        reverse('link:payment_verify', args=[order.id])
-    )
-    
-    response = paystack.initialize_transaction(
-        email=order.buyer.user.email,
-        amount=order.total_price,
-        reference=transaction.reference,
-        callback_url=callback_url
-    )
-    
-    if response.get('status'):
-        return JsonResponse({
-            'status': True,
-            'data': response['data']
-        })
-    return JsonResponse({
-        'status': False,
-        'message': 'Failed to initialize payment'
-    })
+    try:
+        order = get_object_or_404(Order, id=order_id)
+        
+        # Create payment transaction
+        transaction = create_payment_transaction(order)
+        
+        # Build callback URLs
+        success_url = request.build_absolute_uri(
+            reverse('link:payment_success')
+        )
+        cancel_url = request.build_absolute_uri(
+            reverse('link:payment_failed')
+        )
+        
+        # Prepare metadata
+        metadata = {
+            "order_id": order.id,
+            "transaction_id": transaction.id,
+            "cancel_action": cancel_url
+        }
+        
+        # Initialize Paystack transaction
+        paystack = PaystackAPI()
+        response = paystack.initialize_transaction(
+            email=order.buyer.user.email,
+            amount=order.total_price,
+            reference=transaction.reference,
+            callback_url=success_url,
+            metadata=metadata
+        )
+        
+        if response.get('status'):
+            # Redirect to Paystack payment page
+            return redirect(response['data']['authorization_url'])
+        
+        messages.error(request, response.get('message', 'Failed to initialize payment'))
+        return redirect('link:order_detail', order_id=order.id)
+        
+    except Exception as e:
+        messages.error(request, 'An error occurred while processing your payment')
+        return redirect('link:order_detail', order_id=order.id)
 
+@login_required
 def verify_payment(request, order_id):
     """Verify payment status"""
     order = get_object_or_404(Order, id=order_id)
     reference = request.GET.get('reference')
     
     if not reference:
+        messages.error(request, 'Invalid payment reference')
         return redirect('link:payment_failed')
     
     try:
@@ -660,25 +680,112 @@ def verify_payment(request, order_id):
         response = paystack.verify_transaction(reference)
         
         if response.get('status') and response['data']['status'] == 'success':
+            # Update transaction
             transaction.update_status('success')
             transaction.payment_data = response['data']
             transaction.save()
+            
+            # Update order status
+            order.payment_status = 'paid'
+            order.save()
+            
+            # Create order activity
+            OrderActivity.objects.create(
+                order=order,
+                activity_type='payment',
+                description='Payment completed successfully'
+            )
+            
+            messages.success(request, 'Payment completed successfully')
             return redirect('link:payment_success')
         
+        # Handle failed payment
         transaction.update_status('failed')
         transaction.payment_data = response['data']
         transaction.save()
+        
+        OrderActivity.objects.create(
+            order=order,
+            activity_type='payment_failed',
+            description='Payment failed'
+        )
+        
+        messages.error(request, 'Payment failed')
         return redirect('link:payment_failed')
         
     except PaymentTransaction.DoesNotExist:
+        messages.error(request, 'Invalid payment transaction')
         return redirect('link:payment_failed')
+
+@csrf_exempt
+def paystack_webhook(request):
+    """Handle Paystack webhook events"""
+    payload = request.body
+    sig_header = request.headers.get('x-paystack-signature')
+    
+    if not sig_header:
+        return HttpResponse(status=400)
+    
+    try:
+        # Verify webhook signature
+        hash = hmac.new(
+            settings.PAYSTACK_SECRET_KEY.encode('utf-8'),
+            payload,
+            digestmod=hashlib.sha512
+        ).hexdigest()
+        
+        if hash != sig_header:
+            raise Exception("Invalid Signature")
+        
+        # Parse webhook data
+        body = json.loads(payload.decode('utf-8'))
+        event = body.get('event')
+        data = body.get('data', {})
+        
+        if event == 'charge.success':
+            # Get order and transaction details from metadata
+            metadata = data.get('metadata', {})
+            order_id = metadata.get('order_id')
+            transaction_id = metadata.get('transaction_id')
+            
+            if order_id and transaction_id:
+                try:
+                    order = Order.objects.get(id=order_id)
+                    transaction = PaymentTransaction.objects.get(id=transaction_id)
+                    
+                    # Update transaction
+                    transaction.update_status('success')
+                    transaction.payment_data = data
+                    transaction.save()
+                    
+                    # Update order
+                    order.payment_status = 'paid'
+                    order.save()
+                    
+                    # Create activity
+                    OrderActivity.objects.create(
+                        order=order,
+                        activity_type='payment',
+                        description='Payment confirmed via webhook'
+                    )
+                    
+                except (Order.DoesNotExist, PaymentTransaction.DoesNotExist):
+                    return HttpResponse(status=404)
+        
+        return HttpResponse(status=200)
+        
+    except Exception as e:
+        print(f"Webhook Error: {str(e)}")
+        return HttpResponse(status=400)
 
 def payment_success(request):
     """Handle successful payment"""
+    messages.success(request, 'Payment completed successfully')
     return render(request, 'link/payment_success.html')
 
 def payment_failed(request):
     """Handle failed payment"""
+    messages.error(request, 'Payment failed')
     return render(request, 'link/payment_failed.html')
 
 def payment_status(request, reference):
