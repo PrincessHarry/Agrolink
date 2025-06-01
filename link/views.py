@@ -218,7 +218,8 @@ def delete_product(request, slug):
 def order_list(request):
     # Get base queryset based on user type
     if request.user.userprofile.user_type == 'farmer':
-        orders = Order.objects.filter(product__farmer=request.user.userprofile)
+        # Filter orders where the farmer is the seller of any item in the order
+        orders = Order.objects.filter(items__product__seller=request.user)
     else:
         orders = Order.objects.filter(buyer=request.user.userprofile)
     
