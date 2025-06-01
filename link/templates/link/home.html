@@ -37,7 +37,7 @@
         <!-- Image Section -->
         <div class="w-full lg:w-1/2 flex justify-center items-center p-4 lg:p-0 h-full">
             {% load static %}
-            <img class="w-full h-56 sm:h-72 md:h-96 lg:h-full object-contain object-center" src="{% static 'images/farmer 1.png' %}" alt="Farmer">
+            <img class="w-full h-56 sm:h-72 md:h-96 lg:h-full object-contain object-center shadow-2xl rounded-lg" src="{% static 'images/farmer 1.png' %}" alt="Farmer">
         </div>
     </div>
 </div>
@@ -119,7 +119,7 @@
             {% for product in featured_products %}
             {% if product.slug %}
             <a href="{% url 'link:product_detail' slug=product.slug %}" class="group" x-data="{ hover: false }" @mouseenter="hover = true" @mouseleave="hover = false">
-                <div class="w-full aspect-w-1 aspect-h-1 bg-gray-200 rounded-lg overflow-hidden xl:aspect-w-7 xl:aspect-h-8">
+                <div class="w-full aspect-w-1 aspect-h-1 bg-gray-200 rounded-lg overflow-hidden xl:aspect-w-7 xl:aspect-h-8 shadow-lg hover:shadow-xl transition-shadow duration-200">
                     <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-center object-cover transition-transform duration-200" :class="{ 'scale-105': hover }">
                 </div>
                 <h3 class="mt-4 text-sm text-gray-700">{{ product.name }}</h3>
@@ -127,7 +127,7 @@
             </a>
             {% else %}
             <div class="group">
-                <div class="w-full aspect-w-1 aspect-h-1 bg-gray-200 rounded-lg overflow-hidden xl:aspect-w-7 xl:aspect-h-8">
+                <div class="w-full aspect-w-1 aspect-h-1 bg-gray-200 rounded-lg overflow-hidden xl:aspect-w-7 xl:aspect-h-8 shadow-lg hover:shadow-xl transition-shadow duration-200">
                     <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-center object-cover transition-transform duration-200" :class="{ 'scale-105': hover }">
                 </div>
                 <h3 class="mt-4 text-sm text-gray-700">{{ product.name }}</h3>
@@ -159,50 +159,50 @@
         <div class="mt-10">
             <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
                 <!-- Testimonial 1 -->
-                <div class="bg-gray-50 rounded-lg p-6 transform transition-all duration-200 hover:scale-105">
+                <div class="bg-gray-50 rounded-lg p-6 transform transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl">
                     <div class="flex items-center mb-4">
                         <div class="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                            <span class="text-green-600 font-medium">JD</span>
+                            <span class="text-green-600 font-medium">AM</span>
                         </div>
                         <div class="ml-4">
-                            <h4 class="text-lg font-medium text-gray-900">John Doe</h4>
-                            <p class="text-gray-500">Farmer</p>
+                            <h4 class="text-lg font-medium text-gray-900">Aminu Musa</h4>
+                            <p class="text-gray-500">Farmer from Jos North</p>
                         </div>
                     </div>
                     <p class="text-gray-600">
-                        "AgroLink has helped me reach more customers and sell my produce at better prices. The platform is easy to use and the support team is always helpful."
+                        "AgroLink has transformed my farming business. I can now sell my Irish potatoes and vegetables directly to buyers across Plateau State. The platform is very user-friendly!"
                     </p>
                 </div>
 
                 <!-- Testimonial 2 -->
-                <div class="bg-gray-50 rounded-lg p-6 transform transition-all duration-200 hover:scale-105">
+                <div class="bg-gray-50 rounded-lg p-6 transform transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl">
                     <div class="flex items-center mb-4">
                         <div class="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                            <span class="text-green-600 font-medium">JS</span>
+                            <span class="text-green-600 font-medium">SD</span>
                         </div>
                         <div class="ml-4">
-                            <h4 class="text-lg font-medium text-gray-900">Jane Smith</h4>
-                            <p class="text-gray-500">Buyer</p>
+                            <h4 class="text-lg font-medium text-gray-900">Sarah Dung</h4>
+                            <p class="text-gray-500">Buyer from Pankshin</p>
                         </div>
                     </div>
                     <p class="text-gray-600">
-                        "I love being able to buy fresh produce directly from farmers. The quality is amazing and the prices are better than at the supermarket."
+                        "I love getting fresh acha (fonio) and other local grains directly from farmers. The quality is amazing and I can support local farmers in Plateau State."
                     </p>
                 </div>
 
                 <!-- Testimonial 3 -->
-                <div class="bg-gray-50 rounded-lg p-6 transform transition-all duration-200 hover:scale-105">
+                <div class="bg-gray-50 rounded-lg p-6 transform transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl">
                     <div class="flex items-center mb-4">
                         <div class="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                            <span class="text-green-600 font-medium">RJ</span>
+                            <span class="text-green-600 font-medium">YI</span>
                         </div>
                         <div class="ml-4">
-                            <h4 class="text-lg font-medium text-gray-900">Robert Johnson</h4>
-                            <p class="text-gray-500">Restaurant Owner</p>
+                            <h4 class="text-lg font-medium text-gray-900">Yakubu Ibrahim</h4>
+                            <p class="text-gray-500">Restaurant Owner in Jos</p>
                         </div>
                     </div>
                     <p class="text-gray-600">
-                        "As a restaurant owner, having access to fresh, high-quality produce is crucial. AgroLink has made it easy to source ingredients directly from farmers."
+                        "As a restaurant owner in Jos, having access to fresh vegetables and local produce is crucial. AgroLink has made it easy to source ingredients directly from farmers in Plateau."
                     </p>
                 </div>
             </div>

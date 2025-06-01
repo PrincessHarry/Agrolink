@@ -91,9 +91,9 @@ DATABASES = {
     }
 }
 
-# In production, use a different database path
-if not DEBUG:
-    DATABASES['default']['NAME'] = os.path.join(os.environ.get('HOME', BASE_DIR), '.sqlite', 'db.sqlite3')
+# Remove the production database path override
+# if not DEBUG:
+#     DATABASES['default']['NAME'] = os.path.join(os.environ.get('HOME', BASE_DIR), '.sqlite', 'db.sqlite3')
 
 
 # Password validation

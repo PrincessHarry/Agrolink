@@ -19,27 +19,44 @@
                 <div class="flex items-center">
                     <a href="{% url 'link:home' %}" class="text-2xl font-bold">Agrolink</a>
                 </div>
+                
+                <!-- Search Bar -->
+                <div class="hidden md:flex flex-1 max-w-xl mx-8">
+                    <form action="{% url 'link:product_list' %}" method="get" class="w-full">
+                        <div class="relative">
+                            <input type="text" name="search" placeholder="Search products..." 
+                                   class="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/30 focus:bg-white/20 transition-all duration-300"
+                                   value="{{ request.GET.search|default:'' }}">
+                            <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-white/80 hover:text-white transition-colors duration-200">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
                 <div class="hidden md:flex items-center space-x-4">
                     {% if user.is_authenticated %}
-                        <a href="{% url 'link:product_list' %}" class="hover:text-green-200">Products</a>
-                        <a href="{% url 'link:order_list' %}" class="hover:text-green-200">Orders</a>
-                        <a href="{% url 'link:conversations' %}" class="hover:text-green-200 relative">
+                        <a href="{% url 'link:product_list' %}" class="hover:text-green-200 transition-colors duration-200">Products</a>
+                        <a href="{% url 'link:order_list' %}" class="hover:text-green-200 transition-colors duration-200">Orders</a>
+                        <a href="{% url 'link:conversations' %}" class="hover:text-green-200 relative transition-colors duration-200">
                             Messages
                             {% if unread_message_count > 0 %}
                                 <span class="absolute -top-2 -right-3 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">{{ unread_message_count }}</span>
                             {% endif %}
                         </a>
-                        <a href="{% url 'link:profile' %}" class="hover:text-green-200 flex items-center space-x-2">
+                        <a href="{% url 'link:profile' %}" class="hover:text-green-200 flex items-center space-x-2 transition-colors duration-200">
                             <span class="inline-block h-8 w-8 rounded-full bg-green-200 text-green-800 flex items-center justify-center font-bold">{{ user.username|first|upper }}</span>
                             <span class="font-medium">{{ user.get_full_name|default:user.username }}</span>
                         </a>
                         <form method="post" action="{% url 'link:logout' %}" class="inline">
                             {% csrf_token %}
-                            <button type="submit" class="hover:text-green-200">Logout</button>
+                            <button type="submit" class="hover:text-green-200 transition-colors duration-200">Logout</button>
                         </form>
                     {% else %}
-                        <a href="{% url 'link:login' %}" class="hover:text-green-200">Login</a>
-                        <a href="{% url 'link:register' %}" class="hover:text-green-200">Register</a>
+                        <a href="{% url 'link:login' %}" class="hover:text-green-200 transition-colors duration-200">Login</a>
+                        <a href="{% url 'link:register' %}" class="hover:text-green-200 transition-colors duration-200">Register</a>
                     {% endif %}
                 </div>
                 <div class="flex items-center md:hidden">
@@ -50,24 +67,41 @@
                     </button>
                 </div>
             </div>
+            
+            <!-- Mobile Search Bar -->
+            <div class="md:hidden mb-4">
+                <form action="{% url 'link:product_list' %}" method="get">
+                    <div class="relative">
+                        <input type="text" name="search" placeholder="Search products..." 
+                               class="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/30 focus:bg-white/20 transition-all duration-300"
+                               value="{{ request.GET.search|default:'' }}">
+                        <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-white/80 hover:text-white transition-colors duration-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
             <div id="mobile-menu" class="md:hidden hidden bg-green-600 text-white px-4 pt-2 pb-4 space-y-2 rounded-b-lg">
                 {% if user.is_authenticated %}
-                    <a href="{% url 'link:product_list' %}" class="block py-2">Products</a>
-                    <a href="{% url 'link:order_list' %}" class="block py-2">Orders</a>
-                    <a href="{% url 'link:conversations' %}" class="block py-2 relative">
+                    <a href="{% url 'link:product_list' %}" class="block py-2 hover:text-green-200 transition-colors duration-200">Products</a>
+                    <a href="{% url 'link:order_list' %}" class="block py-2 hover:text-green-200 transition-colors duration-200">Orders</a>
+                    <a href="{% url 'link:conversations' %}" class="block py-2 hover:text-green-200 transition-colors duration-200 relative">
                         Messages
                         {% if unread_message_count > 0 %}
                             <span class="absolute top-1 right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full">{{ unread_message_count }}</span>
                         {% endif %}
                     </a>
-                    <a href="{% url 'link:profile' %}" class="block py-2">Profile</a>
+                    <a href="{% url 'link:profile' %}" class="block py-2 hover:text-green-200 transition-colors duration-200">Profile</a>
                     <form method="post" action="{% url 'link:logout' %}" class="block">
                         {% csrf_token %}
-                        <button type="submit" class="w-full text-left py-2">Logout</button>
+                        <button type="submit" class="w-full text-left py-2 hover:text-green-200 transition-colors duration-200">Logout</button>
                     </form>
                 {% else %}
-                    <a href="{% url 'link:login' %}" class="block py-2">Login</a>
-                    <a href="{% url 'link:register' %}" class="block py-2">Register</a>
+                    <a href="{% url 'link:login' %}" class="block py-2 hover:text-green-200 transition-colors duration-200">Login</a>
+                    <a href="{% url 'link:register' %}" class="block py-2 hover:text-green-200 transition-colors duration-200">Register</a>
                 {% endif %}
             </div>
         </div>

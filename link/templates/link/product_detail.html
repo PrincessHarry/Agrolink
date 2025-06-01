@@ -4,55 +4,55 @@
 {% block title %}{{ product.name }} - AgroLink{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
+<div class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <!-- Product Image -->
-        <div class="col-md-6">
-            <div class="card">
-                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+        <div class="relative">
+            <div class="bg-white rounded-lg overflow-hidden shadow-2xl hover:shadow-3xl transition-shadow duration-300">
+                <img src="{{ product.image.url }}" class="w-full h-full object-cover" alt="{{ product.name }}">
             </div>
         </div>
 
         <!-- Product Details -->
-        <div class="col-md-6">
-            <h1 class="mb-3">{{ product.name }}</h1>
-            <p class="text-muted">Category: {{ product.category.name }}</p>
+        <div class="bg-white rounded-lg p-6 shadow-lg">
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ product.name }}</h1>
+            <p class="text-gray-600 mb-4">Category: {{ product.category.name }}</p>
             
-            <div class="mb-3">
-                <h3 class="text-primary">₦{{ product.price }}</h3>
-                <p class="text-muted">Quantity Available: {{ product.quantity }} {{ product.unit }}</p>
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold text-green-600">₦{{ product.price }}</h3>
+                <p class="text-gray-600 mt-2">Quantity Available: {{ product.quantity }} {{ product.unit }}</p>
             </div>
 
-            <div class="mb-4">
-                <h4>Description</h4>
-                <p>{{ product.description }}</p>
+            <div class="mb-6">
+                <h4 class="text-xl font-semibold text-gray-900 mb-2">Description</h4>
+                <p class="text-gray-700">{{ product.description }}</p>
             </div>
 
             <!-- Buy Button -->
             {% if product.status == 'available' %}
                 <form action="{% url 'link:create_order' product.id %}" method="post">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="fas fa-shopping-cart"></i> Buy Now
+                    <button type="submit" class="w-full bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors duration-200 shadow-lg hover:shadow-xl">
+                        <i class="fas fa-shopping-cart mr-2"></i> Buy Now
                     </button>
                 </form>
             {% else %}
-                <button class="btn btn-secondary btn-lg" disabled>
+                <button class="w-full bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold cursor-not-allowed shadow-lg" disabled>
                     {{ product.status|title }}
                 </button>
             {% endif %}
 
             <!-- Seller Information -->
-            <div class="mt-4">
-                <h4>Seller Information</h4>
-                <p>Seller: {{ product.seller.username }}</p>
+            <div class="mt-6 p-4 bg-gray-50 rounded-lg shadow-sm">
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">Seller Information</h4>
+                <p class="text-gray-700">{{ product.seller.username }}</p>
             </div>
 
-            <!-- Reviews Section -->
-            <div class="mt-4">
-                <h4>Reviews</h4>
-                <div class="rating">
-                    <span class="text-warning">
+            <!-- Reviews Summary -->
+            <div class="mt-6">
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">Reviews</h4>
+                <div class="flex items-center">
+                    <div class="text-yellow-400 text-xl">
                         {% for i in "12345" %}
                             {% if forloop.counter <= product.get_rating %}
                                 <i class="fas fa-star"></i>
@@ -60,8 +60,8 @@
                                 <i class="far fa-star"></i>
                             {% endif %}
                         {% endfor %}
-                    </span>
-                    <span class="text-muted">({{ product.get_review_count }} reviews)</span>
+                    </div>
+                    <span class="text-gray-600 ml-2">({{ product.get_review_count }} reviews)</span>
                 </div>
             </div>
         </div>
@@ -69,88 +69,88 @@
 
     <!-- Related Products -->
     {% if related_products %}
-    <div class="mt-5">
-        <h3>Related Products</h3>
-        <div class="row">
+    <div class="mt-12">
+        <h3 class="text-2xl font-bold text-gray-900 mb-6">Related Products</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {% for related in related_products %}
-            <div class="col-md-3">
-                <div class="card">
-                    <img src="{{ related.image.url }}" class="card-img-top" alt="{{ related.name }}">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ related.name }}</h5>
-                        <p class="card-text">₦{{ related.price }}</p>
-                        <a href="{% url 'link:product_detail' related.slug %}" class="btn btn-outline-primary">View Details</a>
-                    </div>
+            <div class="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <img src="{{ related.image.url }}" class="w-full h-48 object-cover" alt="{{ related.name }}">
+                <div class="p-4">
+                    <h5 class="text-lg font-semibold text-gray-900 mb-2">{{ related.name }}</h5>
+                    <p class="text-green-600 font-bold mb-3">₦{{ related.price }}</p>
+                    <a href="{% url 'link:product_detail' related.slug %}" class="block text-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200">
+                        View Details
+                    </a>
                 </div>
             </div>
             {% endfor %}
         </div>
     </div>
     {% endif %}
-</div>
 
-<!-- Reviews Section -->
-<div class="bg-white rounded-lg shadow-lg p-6">
-    <h2 class="text-2xl font-bold mb-4">Customer Reviews</h2>
-    
-    <!-- Add Review Button -->
-    {% if user.is_authenticated and user.userprofile.user_type == 'buyer' %}
-        {% if not user_review %}
-            <a href="{% url 'link:add_review' product.id %}" class="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mb-6">
-                Write a Review
-            </a>
+    <!-- Reviews Section -->
+    <div class="mt-12 bg-white rounded-lg shadow-lg p-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Customer Reviews</h2>
+        
+        <!-- Add Review Button -->
+        {% if user.is_authenticated and user.userprofile.user_type == 'buyer' %}
+            {% if not user_review %}
+                <a href="{% url 'link:add_review' product.id %}" class="inline-block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-md hover:shadow-lg mb-6">
+                    Write a Review
+                </a>
+            {% endif %}
         {% endif %}
-    {% endif %}
 
-    <!-- Average Rating -->
-    <div class="mb-6">
-        <div class="flex items-center">
-            <div class="text-3xl font-bold mr-2">{{ product.get_rating|floatformat:1 }}</div>
-            <div class="text-yellow-400">
-                {% for i in "12345" %}
-                    {% if forloop.counter <= product.get_rating %}
-                        ★
-                    {% else %}
-                        ☆
-                    {% endif %}
-                {% endfor %}
-            </div>
-            <div class="text-gray-600 ml-2">({{ product.get_review_count }} reviews)</div>
-        </div>
-    </div>
-
-    <!-- Reviews List -->
-    <div class="space-y-6">
-        {% for review in product.reviews.all %}
-            <div class="border-b pb-6">
-                <div class="flex justify-between items-start mb-2">
-                    <div>
-                        <div class="font-semibold">{{ review.user.user.username }}</div>
-                        <div class="text-yellow-400">
-                            {% for i in "12345" %}
-                                {% if forloop.counter <= review.rating %}
-                                    ★
-                                {% else %}
-                                    ☆
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-                    </div>
-                    <div class="text-gray-500 text-sm">{{ review.created_at|date:"F j, Y" }}</div>
+        <!-- Average Rating -->
+        <div class="mb-8 bg-gray-50 rounded-lg p-4 shadow-sm">
+            <div class="flex items-center">
+                <div class="text-4xl font-bold text-gray-900 mr-4">{{ product.get_rating|floatformat:1 }}</div>
+                <div class="text-yellow-400 text-2xl">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= product.get_rating %}
+                            ★
+                        {% else %}
+                            ☆
+                        {% endif %}
+                    {% endfor %}
                 </div>
-                <p class="text-gray-700">{{ review.comment }}</p>
-                
-                <!-- Edit/Delete buttons for review owner -->
-                {% if user.is_authenticated and review.user == user.userprofile %}
-                    <div class="mt-2 space-x-2">
-                        <a href="{% url 'link:edit_review' review.id %}" class="text-blue-600 hover:text-blue-800">Edit</a>
-                        <a href="{% url 'link:delete_review' review.id %}" class="text-red-600 hover:text-red-800">Delete</a>
-                    </div>
-                {% endif %}
+                <div class="text-gray-600 ml-4">({{ product.get_review_count }} reviews)</div>
             </div>
-        {% empty %}
-            <p class="text-gray-500">No reviews yet. Be the first to review this product!</p>
-        {% endfor %}
+        </div>
+
+        <!-- Reviews List -->
+        <div class="space-y-6">
+            {% for review in product.reviews.all %}
+                <div class="border-b border-gray-200 pb-6">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <div class="font-semibold text-gray-900">{{ review.user.user.username }}</div>
+                            <div class="text-yellow-400">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= review.rating %}
+                                        ★
+                                    {% else %}
+                                        ☆
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="text-gray-500 text-sm">{{ review.created_at|date:"F j, Y" }}</div>
+                    </div>
+                    <p class="text-gray-700">{{ review.comment }}</p>
+                    
+                    <!-- Edit/Delete buttons for review owner -->
+                    {% if user.is_authenticated and review.user == user.userprofile %}
+                        <div class="mt-3 space-x-3">
+                            <a href="{% url 'link:edit_review' review.id %}" class="text-blue-600 hover:text-blue-800 font-medium">Edit</a>
+                            <a href="{% url 'link:delete_review' review.id %}" class="text-red-600 hover:text-red-800 font-medium">Delete</a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <p class="text-gray-500 text-center py-4">No reviews yet. Be the first to review this product!</p>
+            {% endfor %}
+        </div>
     </div>
 </div>
 {% endblock %} 
